@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on Tue Mar  7 11:09:58 2023
 
@@ -21,7 +22,7 @@ def moteur(excel_file_motor_path):
     #Boucle de tri 
     i=0
     while i<=(len(df)-1):
-        if df["ID_STATUT\nStatus"][i] != "ACTIF":
+        if df["ID_STATUT\nStatus"][i] != "ACTIF" and df["ID_STATUT\nStatus"][i] != "PRILIMINARY":
             df = df.drop(labels=i,axis=0)
         i+=1
     
@@ -103,11 +104,11 @@ def radiateur(excel_file_radiator_path):
         if df["ID_STATUT\nStatus"][i] != "ACTIF":
             df = df.drop(labels=i,axis=0)
         i+=1
-
+    
     #ajout des colonnes conso et type 
     df['conso'] = 0
     df['type'] = 'radiateur'
-    #df = df.drop("ID_REFROID\nType of Cooling", axis=1)
+    df = df.drop_duplicates("REF_REFROID\nCooling part number")
     #df = df.drop("ENC_TYPE\nEnclosure", axis=1)
 
     #Conversion des données au format CSV 
@@ -189,7 +190,7 @@ def capot(excel_file_capot_path):
         
 # --------- AJOUT D'UNE MATIERE A CHAQUE ELEMENT ---------------- 
 
-def element_matiere(CSV_file_motor_path,CSV_file_alternator_path,CSV_file_radiator_path,CSV_file_capot_path):
+def element_matiere(CSV_file_motor_path, CSV_file_alternator_path, CSV_file_radiator_path, CSV_file_capot_path):
     
     #Lecture du fichier CSV
     data_frame_motor = pd.read_csv(CSV_file_motor_path, header=None)
@@ -197,66 +198,40 @@ def element_matiere(CSV_file_motor_path,CSV_file_alternator_path,CSV_file_radiat
     data_frame_radiator = pd.read_csv(CSV_file_radiator_path, header=None)
     data_frame_capot = pd.read_csv(CSV_file_capot_path, header=None)
     
-    
-    #Recuperation de la colonne des identifiants
-    donnees_colonnes_motor = data_frame_motor.iloc[:, 0].tolist()
-    donnees_colonnes_alt = data_frame_alt.iloc[:, 0].tolist()
-    donnees_colonnes_radiator = data_frame_radiator.iloc[:, 0].tolist()
-    donnees_colonnes_capot = data_frame_capot.iloc[:, 0].tolist()
-    
-    
-    #Liste vide
-    lst_motor = [x for x in donnees_colonnes_motor for _ in range(4)]
-    lst_alt = [x for x in donnees_colonnes_alt for _ in range(4)]
-    lst_radia = [x for x in donnees_colonnes_radiator for _ in range(4)]
-    lst_capot = [x for x in donnees_colonnes_capot for _ in range(4)]
-    
+    lst_df = [data_frame_motor, data_frame_alt, data_frame_radiator, data_frame_capot]
+    mes_variables = {}
     matieres = ['acier','aluminium','cuivre','plastique']
-    lst_matieres_motor = []
-    lst_matieres_alt = []
-    lst_matieres_radia = []
-    lst_matieres_capot = []
     
-    
-    #Ajout des 4 matieres pour chaque element dans motor
-    i = 0
-    for i in range(int(len(lst_motor)/4)):
-        lst_matieres_motor += matieres
+    for i, element in enumerate(lst_df):
+        nom_variable_1 = f"donnees_colonnes_{i}"
+        mes_variables[nom_variable_1] = element.iloc[:, 0].tolist()
+        nom_variable_2 = f"lst_{i}"
+        mes_variables[nom_variable_2] = [x for x in mes_variables[nom_variable_1] for _ in range(4)]
+        nom_variable_3 = f"lst_matieres_{i}"
+        mes_variables[nom_variable_3] = []
         
-    j = 0
-    for j in range(int(len(lst_alt)/4)):
-        lst_matieres_alt += matieres
-
-    k = 0
-    for k in range(int(len(lst_radia)/4)):
-        lst_matieres_radia += matieres
+        #Ajout des 4 matieres pour chaque element
+        for j in range(len(mes_variables[nom_variable_1])):
+            mes_variables[nom_variable_3] += matieres
         
-    l = 0
-    for l in range(int(len(lst_capot)/4)):
-        lst_matieres_capot += matieres
+        #Création d'une dataframe
+        nom_variable_4 = f"elem_mat_{i}"
+        mes_variables[nom_variable_4] = {'elements' : nom_variable_2, 'matieres' : nom_variable_3}
+        nom_variable_4 = f"frame_elem_mat_{i}"
+        mes_variables[nom_variable_4] = pd.DataFrame({'elements': mes_variables[nom_variable_2], 'matieres': mes_variables[nom_variable_3]})
     
+    dataframe_elem_matiere = pd.concat([mes_variables['frame_elem_mat_0'], mes_variables['frame_elem_mat_1'], mes_variables['frame_elem_mat_2'], mes_variables['frame_elem_mat_3']])
     
-    #Création d'une dataframe 
-    elem_mat_motor = {'elements' : lst_motor, 'matieres' : lst_matieres_motor}
-    frame_elem_mat_motor = pd.DataFrame(elem_mat_motor)
-    
-    elem_mat_alt = {'elements' : lst_alt, 'matieres' : lst_matieres_alt}
-    frame_elem_mat_alt = pd.DataFrame(elem_mat_alt)
-    
-    elem_mat_radia = {'elements' : lst_radia, 'matieres' : lst_matieres_radia}
-    frame_elem_mat_radia = pd.DataFrame(elem_mat_radia)
-    
-    elem_mat_capot = {'elements' : lst_capot, 'matieres' : lst_matieres_capot}
-    frame_elem_mat_capot = pd.DataFrame(elem_mat_capot)
-    
-    dataframe_elem_matiere =  pd.concat([frame_elem_mat_motor, frame_elem_mat_alt, frame_elem_mat_radia, frame_elem_mat_capot])
+    # inversion des données dans chaque ligne
+    dataframe_elem_matiere = dataframe_elem_matiere.apply(lambda x: x[::-1], axis=1)
     
     #Conversion des données au format CSV 
     csv_data = dataframe_elem_matiere.to_csv(header=False, index=False)
 
     #Enregistrement des données CSV dans un fichier
-    with open("C:/Users/hugot/Desktop/ELEMENTS_MATIERES.csv","w") as f:
+    with open("C:/Users/hugot/Desktop/ELEMENT_MATIERE.csv","w") as f:
         f.write(csv_data)
+
             
 # ---------------------------------------------------------------         
         
@@ -275,12 +250,13 @@ def groupe(excel_file_group_path):
     df.rename(columns={'IDENT\nItem': 'ID', 'ID_STATUT\nStatus': 'Status','ENC_PDSBRT_IN\nGross weight (kg)': 'pds','ENC_TYPE\nEnclosure' : 'capot'}, inplace=True)
     i=0
     while i<=(len(dfg)-1):
-        if df["Status"][i] != "ACTIF" :
+        if df["Status"][i] != "ACTIF":
             df = df.drop(labels=i,axis=0)
         i+=1
-    
+    df_filtre = df[~df['capot'].str.contains('BASE|DW|ISO20|SSI', na=False)]
+    df_filtre = df_filtre.drop('capot',axis=1)
     #Conversion des données au format CSV 
-    csv_data = df.to_csv(header=False, index=False)
+    csv_data = df_filtre.to_csv(header=False, index=False)
 
     #Enregistrement des données CSV dans un fichier
     with open("C:/Users/hugot/Desktop/GROUPE.csv","w") as f:
@@ -293,28 +269,29 @@ def groupe(excel_file_group_path):
 def groupe_element(excel_file_group_elem_path, excel_file_radiator_path):
     
     #Colonnes que l'on souhaite traiter 
-    column_name_groupe_moteur = ["IDENT\nItem",'ID_MOT\nEngine type']
-    colomn_name_groupe_alternateur = ["IDENT\nItem","ID_ALT\nAlternator type"]
-    colomn_name_groupe_capot = ["IDENT\nItem","ID_CAPOT\nCanopy"]
+    column_name_groupe_moteur = ['ID_MOT\nEngine type',"IDENT\nItem"]
+    colomn_name_groupe_alternateur = ["ID_ALT\nAlternator type","IDENT\nItem"]
+    colomn_name_groupe_capot = ["ID_CAPOT\nCanopy","IDENT\nItem"]
     colomn_name_groupe_pupitre = ["IDENT\nItem"]
-    colomn_name_groupe_radiateur = ["IDENT\nItem", "REF_REFROID\nCooling part number"]
+    colomn_name_groupe_radiateur = ["REF_REFROID\nCooling part number","IDENT\nItem"]
 
     #Lecture du fichier pour le moteur 
     dfg = pd.read_excel(excel_file_group_elem_path)
 
     #Séléction des colonnes que l'on souhaite traiter 
     df1 = dfg[column_name_groupe_moteur]
-    df1.rename(columns={'IDENT\nItem': 'ID', 'ID_MOT\nEngine type': 'element'}, inplace=True)
+    df1.rename(columns={ 'ID_MOT\nEngine type': 'element','IDENT\nItem': 'ID'}, inplace=True)
     
     #Pour l'altérnateur
     dfa = pd.read_excel(excel_file_group_elem_path)
     df2 = dfa[colomn_name_groupe_alternateur]
-    df2.rename(columns={'IDENT\nItem': 'ID', 'ID_ALT\nAlternator type': 'element'}, inplace=True)
+    df2.rename(columns={'ID_ALT\nAlternator type': 'element','IDENT\nItem': 'ID'}, inplace=True)
     
-        #Pour le capot
+    #Pour le capot
     dfr = pd.read_excel(excel_file_group_elem_path)
     df3 = dfr[colomn_name_groupe_capot]
-    df3.rename(columns={'IDENT\nItem': 'ID', "ID_CAPOT\nCanopy": 'element'}, inplace=True)
+    df3.rename(columns={"ID_CAPOT\nCanopy": 'element','IDENT\nItem': 'ID'}, inplace=True)
+    df3 = df3.dropna(subset=['element'])
     
     #Pour le pupitre
     dfr = pd.read_excel(excel_file_group_elem_path)
@@ -326,15 +303,6 @@ def groupe_element(excel_file_group_elem_path, excel_file_radiator_path):
         pupitre.append(element)
     df4 = df4.assign(element=pupitre)
     
-    #Pour le chassis
-    dfr = pd.read_excel(excel_file_group_elem_path)
-    df5 = dfr[colomn_name_groupe_pupitre]
-    df5.rename(columns={'IDENT\nItem': 'ID'}, inplace=True)
-    chassis = []
-    element = 'CHASSIS'
-    for i in range(len(df5)):
-        chassis.append(element)
-    df5 = df5.assign(element=chassis)
     
     #Pour le radiateur
     dfv = pd.read_excel(excel_file_group_elem_path)
@@ -347,10 +315,14 @@ def groupe_element(excel_file_group_elem_path, excel_file_radiator_path):
     merged_df = pd.merge(dfv, dfc, left_on='DESC_GEN\nDescription', right_on='IDENT_GE\nGenset model')
            
     df6 = merged_df[colomn_name_groupe_radiateur]
-    df6.rename(columns={'IDENT\nItem': 'ID', "REF_REFROID\nCooling part number": 'element'}, inplace=True)
+    df6.rename(columns={ "REF_REFROID\nCooling part number": 'element','IDENT\nItem': 'ID'}, inplace=True)
+    df6 = df6.drop_duplicates()
     
+    nouvelle_dataframe =  pd.concat([df1, df2, df3, df4, df6])
     
-    nouvelle_dataframe =  pd.concat([df1, df2, df3, df4, df5, df6])
+    # inversion des données dans chaque ligne
+    nouvelle_dataframe = nouvelle_dataframe.apply(lambda x: x[::-1], axis=1)
+    
     
     #Conversion des données au format CSV 
     csv_data = nouvelle_dataframe.to_csv(header=False, index=False)
@@ -360,6 +332,30 @@ def groupe_element(excel_file_group_elem_path, excel_file_radiator_path):
         f.write(csv_data)
     
     
+def type_element():
+    """
+    Fonction qui créer un fichier CSV TYPE.csv
+    Le fichier CSV contiendra les 6 éléments qui composent un GE
+    """
+    #création d'un DataFrame avec une seule colonne de données
+    df = pd.DataFrame({'Colonne': ['alternateur', 'capot', 'chassis', 'moteur', 'pupitre', 'radiateur']})
+
+    #écriture du DataFrame dans un fichier CSV
+    df.to_csv("C:/Users/hugot/Desktop/TYPE.csv", header=False, index=False)
+    
+def matieres():
+    nom_matieres = ['acier', 'aluminium', 'cuivre', 'fuel','hvo', 'plastique']
+    coeff_matieres = [2211,7803,1445,2.93,0.712,1870]
+    
+    ademe = {'nom' : nom_matieres, 'coeff' : coeff_matieres}
+    frame_ademe = pd.DataFrame(ademe)
+    
+    #Conversion des données au format CSV 
+    csv_data = frame_ademe.to_csv(header=False, index=False)
+
+    #Enregistrement des données CSV dans un fichier
+    with open("C:/Users/hugot/Desktop/MATIERES.csv","w") as f:
+        f.write(csv_data)
 # ---------------------------------------------------------------         
         
 # --------------------- FONTION MAIN ---------------------------- 
@@ -389,6 +385,8 @@ def main():
     element_matiere(CSV_file_motor_path,CSV_file_alternator_path,CSV_file_radiator_path,CSV_file_capot_path)
     groupe(excel_file_group_path)
     groupe_element(excel_file_group_elem_path,excel_file_radiator_path)
+    matieres()
+    type_element()
     
     print('Conversion réalisée avec succès')
 

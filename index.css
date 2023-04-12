@@ -1,0 +1,92 @@
+h1{
+    text-align: center;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 50px;
+}
+
+label{
+    display: block;
+    text-align: center;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 20px;
+}
+label.choix{
+    margin-top: 50px;
+}
+
+select, input{
+    display: block;
+    margin: 0 auto;
+    margin-top: 15px;
+}
+
+button{
+    display: block;
+    margin: 0 auto;
+}
+
+div.bilan_moteur{
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 20px;
+}
+
+div.moteur{
+
+    text-align: center;
+    margin-top: 30px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 30px;
+}
+
+div.bilan_conso{
+    text-align: center;
+    margin-top: 30px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+div.total{
+    text-align: center;
+    margin-top: 30px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 30px;
+}
+
+div.bilan_total{
+    text-align: center;
+    margin-top: 30px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    font-family: sans-serif;
+    color: #333;
+    background-color: #fff;
+}
+
+input{
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    font-family: sans-serif;
+    color: #333;
+    background-color: #fff;
+}
+
+button{
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 16px;
+    font-family: sans-serif;
+    color: #fff;
+    background-color: #333;
+    cursor: pointer;
+    margin-bottom: -40px;
+}
